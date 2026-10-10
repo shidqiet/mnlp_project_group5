@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#SBATCH --partition=rome
+#SBATCH --job-name=download_models
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=02:00:00
+#SBATCH --output=slurm_output_%A.out
+#SBATCH --error=slurm_output_%A.err
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate eurogest
+
+cd $HOME/experiments
+
+# Download semua model secara sequential (satu per satu) supaya nggak race condition
+python -c "
+from huggingface_hub import snapshot_download
+import os
+
+token = '$HF_TOKEN'
+
+models = [
+    'meta-llama/Llama-2-7b-hf',
+    'LeoLM/leo-hessianai-7b',
+    'ChocoLlama/ChocoLlama-2-7B-base',
+]
+
+for m in models:
+    print(f'Downloading {m} ...')
+    snapshot_download(m, token=token)
+    print(f'Done: {m}')
+"
+echo "All models downloaded!"

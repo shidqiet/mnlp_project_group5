@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=german_llama2
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=04:00:00
+#SBATCH --output=slurm_output_%A.out
+#SBATCH --error=slurm_output_%A.err
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate eurogest
+
+cd $HOME/experiments
+
+export TOKENIZERS_PARALLELISM=false
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+
+python main.py \
+    --model-id meta-llama/Llama-2-7b-hf \
+    --language German \
+    --data-path data/German.csv \
+    --output results/german_llama2.csv \
+    --hf-token $HF_TOKEN
