@@ -37,3 +37,46 @@ To Run Full Pipeline: Set SAMPLE_SIZE=1.
 ```bash
 ./translate_dataset.sh
 ```
+## QE scoring
+
+`qe_scoring.py` adds a COMET-QE score to every translated sentence. It runs after the translation
+script and before `heuristic_filtering.py`.
+
+Unlike `qe_filtering.py`, which drops every row at or below the threshold and keeps no scores,
+nothing is dropped here: each row keeps its score, so the threshold can be chosen - and changed -
+afterwards.
+
+```bash
+./score_dataset.sh
+```
+
+or directly:
+
+```bash
+python qe_scoring.py \
+    --languages "Chinese,Indonesian" \
+    --data_dir ./translated_output \
+    --out_dir ./scored_output \
+    --gest_path ./gest_1.1.csv
+```
+
+**Input**: the files written by the translation scripts (row index = GEST row, `GEST_sentence`,
+`translation`, `original_stereotype`).
+**Output**: `<out_dir>/<language>.csv`, the same rows and columns with `COMET_score` added, plus
+`qe_summary.csv` with per-language min/median/mean/max and how many rows are above the threshold.
+
+Notes:
+
+- The model (`Unbabel/wmt22-cometkiwi-da`) is **gated** on Hugging Face. Accept the conditions on the
+  model page, then log in once with `huggingface-cli login`. The first run downloads 2.3 GB.
+- The checkpoint is pinned by revision, and scores are cached in `<out_dir>/.qe_cache.sqlite`, so a
+  rerun costs nothing and returns exactly the same numbers. Delete that file to force rescoring.
+- Every row is checked against `gest_1.1.csv` (row number in range, `GEST_sentence` and
+  `original_stereotype` equal to GEST). The run stops if a file no longer lines up, instead of
+  quietly scoring sentences against the wrong source.
+- `requirements.txt` pins `torch==2.9.1`, which needs **Python 3.10 or newer**. On 3.9 pip resolves
+  older torch and COMET, and the scores can differ.
+- Rows with an empty translation keep an empty score, so an interrupted translation run can be
+  scored and finished later.
+- This script scores gender-neutral languages (one translation per sentence). For gendered languages,
+  `qe_filtering.py` scores the masculine and feminine templates.

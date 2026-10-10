@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# QE scoring outputs and score cache
+scored_output/
+.qe_cache.sqlite
