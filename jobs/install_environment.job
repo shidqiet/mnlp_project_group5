@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --partition=rome
+#SBATCH --job-name=InstallEnvironment
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=04:00:00
+#SBATCH --output=slurm_output_%A.out
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+
+conda create -n eurogest python=3.12 -y --override-channels -c conda-forge
+source activate eurogest
+
+pip install -r $HOME/experiments/requirements.txt
+
+echo "=== Install done. Verifying ==="
+python -c "
+import torch, transformers, datasets, matplotlib, seaborn, scipy
+print('torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())
+print('transformers:', transformers.__version__)
+print('datasets:', datasets.__version__)
+print('matplotlib:', matplotlib.__version__)
+print('All imports OK!')
+"
