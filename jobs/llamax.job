@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_h100
+#SBATCH --gpus=1
+#SBATCH --job-name=llamax
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=03:00:00
+#SBATCH --output=slurm_output_%A.out
+#SBATCH --error=slurm_output_%A.err
+
+module purge
+module load 2025
+module load Anaconda3/2025.06-1
+source activate eurogest
+
+cd $HOME/experiments/mnlp_project_group5
+
+export TOKENIZERS_PARALLELISM=false
+
+python -m evaluate_models.llamax.main \
+    --input $HOME/experiments/results/all_sentence_scores.csv \
+    --output $HOME/experiments/results/llamax.csv
